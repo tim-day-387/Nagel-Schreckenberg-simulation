@@ -1,6 +1,9 @@
+# General Imports
 import pygame
 
+# InfoDisplayer class
 class InfoDisplayer():
+    # Constructor
     def __init__(self, screen, road, simulationManager):
         self.screen = screen
         self.road = road
@@ -13,9 +16,11 @@ class InfoDisplayer():
         self.text = [self.keysInfo]
         self.renderLabels()
 
+    # Generates labels
     def renderLabels(self):
         self.labels = list(map(lambda x: self.font.render(x, 1, (255, 255, 0)), self.text))
 
+    # Determines what the labels will be
     def update(self):
         totalCars, avgSpeed = self.road.getAvgCarSpeed()
         deadCars = self.road.deadCars
@@ -32,6 +37,7 @@ class InfoDisplayer():
         self.text = text
         self.renderLabels()
 
+    # Update the speed label
     def updateSpeed(self):
         if len(self.text) == 0: return
         if self.timeFactor != self.simulationManager.timeFactor:
@@ -39,6 +45,7 @@ class InfoDisplayer():
             self.text[0] = "speed: {0}x".format(self.timeFactor)
             self.renderLabels()
 
+    # Draw the labels as they have been rendered
     def draw(self):
         self.updateSpeed()
         y = self.screen.get_height() - 160
