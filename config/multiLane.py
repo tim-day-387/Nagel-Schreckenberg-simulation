@@ -15,5 +15,5 @@ maxSpeed = 5
 maxLength = 1000
 
 speedLimits = []
-trafficGenerator = SimpleTrafficGenerator(10)
+trafficGenerator = TestTrafficGenerator(10)
 slowDownProbability, laneChangeProbability = 0.3, 0.2
