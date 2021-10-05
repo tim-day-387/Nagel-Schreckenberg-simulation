@@ -1,5 +1,5 @@
 # General Imports
-import sys, pygame, simulation.road, simulation.speedLimits, random, importlib, config
+import sys, simulation.road, simulation.speedLimits, random, importlib, config
 from simulation.car import Car
 from representation import Representation
 from simulationManager import SimulationManager
@@ -17,26 +17,31 @@ config = importlib.import_module(sys.argv[1])
 random.seed(config.seed)
 
 # Grab info from configs and create objects
-pygame.init()
-screen = pygame.display.set_mode(config.size)
-clock = pygame.time.Clock()
 simulation.car.Car.slowDownProbability = config.slowDownProbability
 simulation.car.Car.laneChangeProbability = config.laneChangeProbability
-speedLimits = simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed)
-road = simulation.road.Road(config.lanes, config.length, speedLimits)
-simulation = SimulationManager(road, config.trafficGenerator, config.updateFrame)
-representation = Representation(screen, road, simulation)
+speedLimits1 = simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed)
+speedLimits2 = simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed + 100)
+road1 = simulation.road.Road(config.lanes, config.length, speedLimits1)
+simulation1 = SimulationManager(road1, config.trafficGenerator, config.updateFrame)
+road2 = simulation.road.Road(config.lanes, config.length, speedLimits2)
+simulation2 = SimulationManager(road2, config.trafficGenerator, config.updateFrame)
 
-# Run simulation
-while simulation.running:
-    # Process key presses
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            simulation.processKey(event.key)
+# Perform simulation
+print("Simulation Started.")
 
-    # Update and display simulation
-    clock.tick_busy_loop(config.maxFps)
-    dt = clock.get_time()
-    simulation.update(dt)
-    representation.draw(dt * simulation.timeFactor)
-    pygame.display.flip()
+overallAvgSpeed = [0, 0]
+iterations = 500
+
+for x in range(iterations):
+    simulation1.makeStep()
+    totalCars, avgSpeed = road1.getAvgCarSpeed()
+    overallAvgSpeed[0] = avgSpeed + overallAvgSpeed[0]
+    simulation2.makeStep()
+    totalCars, avgSpeed = road2.getAvgCarSpeed()
+    overallAvgSpeed[1] = avgSpeed + overallAvgSpeed[1]
+
+
+print("First: ", overallAvgSpeed[0]/iterations)
+print("Second: ", overallAvgSpeed[1]/iterations)
+
+print("Simulation Completed.")
