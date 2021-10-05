@@ -4,6 +4,8 @@ from simulation.car import Car
 from representation import Representation
 from simulationManager import SimulationManager
 from simulation.trafficGenerators import *
+from tabulate import tabulate
+import numpy as np
 
 # Check for correct number of imports
 if len(sys.argv) != 2:
@@ -19,29 +21,47 @@ random.seed(config.seed)
 # Grab info from configs and create objects
 simulation.car.Car.slowDownProbability = config.slowDownProbability
 simulation.car.Car.laneChangeProbability = config.laneChangeProbability
-speedLimits1 = simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed)
-speedLimits2 = simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed + 100)
-road1 = simulation.road.Road(config.lanes, config.length, speedLimits1)
-simulation1 = SimulationManager(road1, config.trafficGenerator, config.updateFrame)
-road2 = simulation.road.Road(config.lanes, config.length, speedLimits2)
-simulation2 = SimulationManager(road2, config.trafficGenerator, config.updateFrame)
+trafficGenerator = TestTrafficGenerator(0)
+speedLimits = [simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed), \
+               simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed), \
+               simulation.speedLimits.SpeedLimits(config.speedLimits, config.maxSpeed)]
+road = [simulation.road.Road(config.lanes, config.length, speedLimits[0]), \
+        simulation.road.Road(config.lanes, config.length, speedLimits[1]), \
+        simulation.road.Road(config.lanes, config.length, speedLimits[2])]
+simulation = [SimulationManager(road[0], trafficGenerator, config.updateFrame), \
+              SimulationManager(road[1], trafficGenerator, config.updateFrame), \
+              SimulationManager(road[2], trafficGenerator, config.updateFrame)]
 
 # Perform simulation
 print("Simulation Started.")
 
-overallAvgSpeed = [0, 0]
+overallAvgSpeed = [0, 0, 0]
+initialCars = [5, 50, 35]
+allocated = initialCars
+deadCars = [0, 0, 0]
 iterations = 500
+totalCars = [0, 0, 0]
+numSims = len(simulation)
 
 for x in range(iterations):
-    simulation1.makeStep()
-    totalCars, avgSpeed = road1.getAvgCarSpeed()
-    overallAvgSpeed[0] = avgSpeed + overallAvgSpeed[0]
-    simulation2.makeStep()
-    totalCars, avgSpeed = road2.getAvgCarSpeed()
-    overallAvgSpeed[1] = avgSpeed + overallAvgSpeed[1]
+    for y in range(numSims):
+        if iterations == 1:
+            trafficGenerator.carPerUpdate = initialCars[y]
+        else:
+            trafficGenerator.carPerUpdate = allocated[y]
+        
+        simulation[y].makeStep()
+        totalCars[y], avgSpeed = road[y].getAvgCarSpeed()
+        overallAvgSpeed[y] = avgSpeed + overallAvgSpeed[y]
 
+headers = ["Road", "Average Speed", "Number of Cars"]
+data = np.zeros((numSims, 3))
 
-print("First: ", overallAvgSpeed[0]/iterations)
-print("Second: ", overallAvgSpeed[1]/iterations)
+for y in range(numSims):
+    data[y][0] = y
+    data[y][1] = overallAvgSpeed[y]/iterations
+    data[y][2] = totalCars[y]
 
+print(tabulate(data, headers))
+    
 print("Simulation Completed.")
