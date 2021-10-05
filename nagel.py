@@ -32,36 +32,50 @@ simulation = [SimulationManager(road[0], trafficGenerator, config.updateFrame), 
               SimulationManager(road[1], trafficGenerator, config.updateFrame), \
               SimulationManager(road[2], trafficGenerator, config.updateFrame)]
 
-# Perform simulation
+# Start simulation
 print("Simulation Started.")
 
+# Simulation parameters
 overallAvgSpeed = [0, 0, 0]
-initialCars = [5, 50, 35]
-allocated = initialCars
+sourceCars = 2
+initialCars = [sourceCars, 0, 0]
+allocated = [sourceCars, 0, 0, 0]
 deadCars = [0, 0, 0]
 iterations = 500
-totalCars = [0, 0, 0]
+overallTotalCars = [0, 0, 0]
 numSims = len(simulation)
 
+# Iterate all simulations 
 for x in range(iterations):
     for y in range(numSims):
+        # Decide whether to use initial value
         if iterations == 1:
             trafficGenerator.carPerUpdate = initialCars[y]
         else:
             trafficGenerator.carPerUpdate = allocated[y]
-        
+
+        # Iterate simulation
         simulation[y].makeStep()
-        totalCars[y], avgSpeed = road[y].getAvgCarSpeed()
+
+        # Update cars leaving roads
+        allocated[y + 1] = road[y].deadCars - deadCars[y]
+        deadCars[y] = road[y].deadCars
+
+        # Collect stats
+        totalCars, avgSpeed = road[y].getAvgCarSpeed()
+        overallTotalCars[y] = totalCars + overallTotalCars[y]
         overallAvgSpeed[y] = avgSpeed + overallAvgSpeed[y]
 
-headers = ["Road", "Average Speed", "Number of Cars"]
+# Table info
+headers = ["Road", "Average Speed", "Average Number of Cars"]
 data = np.zeros((numSims, 3))
 
+# Populate table
 for y in range(numSims):
     data[y][0] = y
     data[y][1] = overallAvgSpeed[y]/iterations
-    data[y][2] = totalCars[y]
+    data[y][2] = overallTotalCars[y]/iterations
 
+# Print final results
 print(tabulate(data, headers))
-    
 print("Simulation Completed.")
