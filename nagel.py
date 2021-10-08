@@ -5,6 +5,7 @@ from representation import Representation
 from simulationManager import SimulationManager
 from simulation.trafficGenerators import *
 from tabulate import tabulate
+from intersection import intersection
 import numpy as np
 
 # Check for correct number of imports
@@ -31,13 +32,16 @@ road = [simulation.road.Road(config.lanes, config.length, speedLimits[0]), \
 simulation = [SimulationManager(road[0], trafficGenerator, config.updateFrame), \
               SimulationManager(road[1], trafficGenerator, config.updateFrame), \
               SimulationManager(road[2], trafficGenerator, config.updateFrame)]
+intersections = [intersection(0, [1, 2])]
+# intersections = [intersection(0, [1, 2]), intersection(1, [0]), intersection(2, [0])]
 
 # Start simulation
 print("Simulation Started.")
 
 # Simulation parameters
 overallAvgSpeed = [0, 0, 0]
-sourceCars = 2
+sourceCars = 20
+# initialCars = [200, 200, 200]
 initialCars = [sourceCars, 0, 0]
 allocated = [sourceCars, 0, 0, 0]
 deadCars = [0, 0, 0]
@@ -57,8 +61,15 @@ for x in range(iterations):
         # Iterate simulation
         simulation[y].makeStep()
 
+    # Reset allocated
+    allocated = [sourceCars, 0, 0, 0]
+        
+    for y in range(numSims):
         # Update cars leaving roads
-        allocated[y + 1] = road[y].deadCars - deadCars[y]
+        for i in intersections:
+            allocated = i.applyRule(allocated, simulation, road, deadCars)
+        
+        # Account for new deadCars
         deadCars[y] = road[y].deadCars
 
         # Collect stats
