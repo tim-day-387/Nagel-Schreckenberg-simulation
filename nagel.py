@@ -32,8 +32,8 @@ road = [simulation.road.Road(config.lanes, config.length, speedLimits[0]), \
 simulation = [SimulationManager(road[0], trafficGenerator, config.updateFrame), \
               SimulationManager(road[1], trafficGenerator, config.updateFrame), \
               SimulationManager(road[2], trafficGenerator, config.updateFrame)]
-intersections = [intersection(0, [1, 2])]
-# intersections = [intersection(0, [1, 2]), intersection(1, [0]), intersection(2, [0])]
+# intersections = [intersection(0, [1, 2])]
+intersections = [intersection(0, [1, 2]), intersection(1, [0]), intersection(2, [0])]
 
 # Start simulation
 print("Simulation Started.")
@@ -41,9 +41,9 @@ print("Simulation Started.")
 # Simulation parameters
 overallAvgSpeed = [0, 0, 0]
 sourceCars = 20
-# initialCars = [200, 200, 200]
-initialCars = [sourceCars, 0, 0]
-allocated = [sourceCars, 0, 0, 0]
+initialCars = [200, 0, 0]
+# initialCars = [sourceCars, 0, 0]
+allocated = [0, 0, 0, 0]
 deadCars = [0, 0, 0]
 iterations = 500
 overallTotalCars = [0, 0, 0]
@@ -53,7 +53,7 @@ numSims = len(simulation)
 for x in range(iterations):
     for y in range(numSims):
         # Decide whether to use initial value
-        if iterations == 1:
+        if x == 0:
             trafficGenerator.carPerUpdate = initialCars[y]
         else:
             trafficGenerator.carPerUpdate = allocated[y]
@@ -61,14 +61,19 @@ for x in range(iterations):
         # Iterate simulation
         simulation[y].makeStep()
 
+    print("Allocated: ", x)
+    print(allocated)
+
     # Reset allocated
-    allocated = [sourceCars, 0, 0, 0]
+    allocated = [0, 0, 0, 0]
         
     for y in range(numSims):
         # Update cars leaving roads
         for i in intersections:
             allocated = i.applyRule(allocated, simulation, road, deadCars)
-        
+
+        # print(allocated)
+            
         # Account for new deadCars
         deadCars[y] = road[y].deadCars
 
@@ -77,6 +82,9 @@ for x in range(iterations):
         overallTotalCars[y] = totalCars + overallTotalCars[y]
         overallAvgSpeed[y] = avgSpeed + overallAvgSpeed[y]
 
+    print("Dead Cars: ", x)
+    print(deadCars)
+        
 # Table info
 headers = ["Road", "Average Speed", "Average Number of Cars"]
 data = np.zeros((numSims, 3))
