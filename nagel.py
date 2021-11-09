@@ -4,7 +4,7 @@ from simulation.car import Car
 from simulationManager import SimulationManager
 from simulation.trafficGenerators import *
 from tabulate import tabulate
-from intersection import intersection
+from simulation.intersection import intersection
 import numpy as np
 
 # Check for correct number of imports
