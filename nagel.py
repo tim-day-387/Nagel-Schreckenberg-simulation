@@ -56,6 +56,9 @@ def createSims(numOfRoads):
 
 # Main Simulation, Tables
 def main(numSims):
+    # Define allocated
+    allocated = [0] * (numSims + 1)
+    
     # Run each iteration 
     for x in range(iterations):
         # Run each simulation
